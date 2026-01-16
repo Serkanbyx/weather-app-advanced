@@ -146,21 +146,46 @@ function Footer() {
   return (
     <footer className="mt-auto py-6 border-t border-storm-800">
       <div className="container mx-auto px-4">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-storm-400">
-          <p>
-            © {new Date().getFullYear()} WeatherApp. Data from{' '}
-            <a 
-              href="https://openweathermap.org" 
-              target="_blank" 
+        <div className="flex flex-col items-center gap-4 text-sm text-storm-400">
+          {/* Main Info Row */}
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 w-full">
+            <p>
+              © {new Date().getFullYear()} WeatherApp. Data from{' '}
+              <a 
+                href="https://openweathermap.org" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-weather-400 hover:underline"
+              >
+                OpenWeatherMap
+              </a>
+            </p>
+            <p className="flex items-center gap-2">
+              <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+              PWA Ready • Works Offline
+            </p>
+          </div>
+          
+          {/* Signature */}
+          <p className="text-storm-500">
+            Created by{' '}
+            <a
+              href="https://serkanbayraktar.com/"
+              target="_blank"
               rel="noopener noreferrer"
-              className="text-weather-400 hover:underline"
+              className="text-weather-400 hover:text-weather-300 hover:underline transition-colors"
             >
-              OpenWeatherMap
+              Serkanby
             </a>
-          </p>
-          <p className="flex items-center gap-2">
-            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-            PWA Ready • Works Offline
+            {' | '}
+            <a
+              href="https://github.com/Serkanbyx"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-weather-400 hover:text-weather-300 hover:underline transition-colors"
+            >
+              Github
+            </a>
           </p>
         </div>
       </div>

@@ -111,10 +111,16 @@ export function getDayName(dateStr: string): string {
  * Process 5-day forecast into daily summaries
  */
 export function processForecast(forecast: ForecastResponse): ProcessedForecast[] {
+  // Guard clause: Return empty array if forecast data is invalid
+  if (!forecast?.list || !Array.isArray(forecast.list) || forecast.list.length === 0) {
+    return []
+  }
+
   const dailyMap = new Map<string, ForecastItem[]>()
   
   // Group forecast items by date
   forecast.list.forEach(item => {
+    if (!item?.dt_txt) return
     const date = item.dt_txt.split(' ')[0]
     const existing = dailyMap.get(date) || []
     dailyMap.set(date, [...existing, item])
@@ -124,14 +130,20 @@ export function processForecast(forecast: ForecastResponse): ProcessedForecast[]
   const processed: ProcessedForecast[] = []
   
   dailyMap.forEach((items, date) => {
-    const temps = items.map(i => i.main.temp)
-    const humidities = items.map(i => i.main.humidity)
-    const winds = items.map(i => i.wind.speed)
-    const pops = items.map(i => i.pop)
+    // Skip if no valid items
+    if (!items || items.length === 0) return
+
+    const temps = items.map(i => i.main?.temp ?? 0)
+    const humidities = items.map(i => i.main?.humidity ?? 0)
+    const winds = items.map(i => i.wind?.speed ?? 0)
+    const pops = items.map(i => i.pop ?? 0)
     
     // Get midday weather for the day's icon (12:00 or closest)
-    const middayItem = items.find(i => i.dt_txt.includes('12:00:00')) || items[Math.floor(items.length / 2)]
+    const middayItem = items.find(i => i.dt_txt?.includes('12:00:00')) || items[Math.floor(items.length / 2)]
     
+    // Skip if midday item or weather data is missing
+    if (!middayItem?.weather?.[0]) return
+
     processed.push({
       date,
       dayName: getDayName(date),

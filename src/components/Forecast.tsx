@@ -94,9 +94,15 @@ function ForecastItem({ day, index, unit }: ForecastItemProps) {
 export function Forecast() {
   const { forecast, unit } = useWeatherStore()
   
-  if (!forecast) return null
+  // Guard clause: Return null if forecast data is invalid
+  if (!forecast?.list || !Array.isArray(forecast.list) || forecast.list.length === 0) {
+    return null
+  }
   
   const processedForecast = processForecast(forecast)
+  
+  // Return null if no processed data
+  if (processedForecast.length === 0) return null
   
   return (
     <div className="glass-card animate-slide-up animation-delay-200">
@@ -124,7 +130,10 @@ export function Forecast() {
 export function HourlyForecastPreview() {
   const { forecast, unit } = useWeatherStore()
   
-  if (!forecast) return null
+  // Guard clause: Return null if forecast data is invalid
+  if (!forecast?.list || !Array.isArray(forecast.list) || forecast.list.length === 0) {
+    return null
+  }
   
   const hourlyItems = forecast.list.slice(0, 8)
   
@@ -136,8 +145,12 @@ export function HourlyForecastPreview() {
       
       <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
         {hourlyItems.map((item, index) => {
+          // Skip items with missing weather data
+          if (!item?.weather?.[0] || !item?.main) return null
+          
           const time = new Date(item.dt * 1000)
           const isNow = index === 0
+          const weatherData = item.weather[0]
           
           return (
             <div 
@@ -160,8 +173,8 @@ export function HourlyForecastPreview() {
               </span>
               
               <img 
-                src={getWeatherIconUrl(item.weather[0].icon, '2x')} 
-                alt={item.weather[0].description}
+                src={getWeatherIconUrl(weatherData.icon, '2x')} 
+                alt={weatherData.description}
                 className="w-10 h-10 weather-icon"
               />
               
@@ -169,11 +182,11 @@ export function HourlyForecastPreview() {
                 {formatTemp(item.main.temp, unit)}
               </span>
               
-              {item.pop > 0 && (
+              {(item.pop ?? 0) > 0 && (
                 <div className="flex items-center gap-1 mt-1">
                   <CloudRain className="w-3 h-3 text-weather-400" />
                   <span className="text-xs text-weather-400">
-                    {Math.round(item.pop * 100)}%
+                    {Math.round((item.pop ?? 0) * 100)}%
                   </span>
                 </div>
               )}

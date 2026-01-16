@@ -19,7 +19,10 @@ import { toast } from '@/components/ui/Toast'
 export function CurrentWeather() {
   const { currentWeather, unit, addFavorite, removeFavorite, isFavorite, favorites } = useWeatherStore()
   
-  if (!currentWeather) return null
+  // Guard clause: Return null if weather data is invalid
+  if (!currentWeather?.weather?.[0] || !currentWeather?.main || !currentWeather?.sys) {
+    return null
+  }
   
   const { main, weather, wind, sys, name, visibility, dt, timezone } = currentWeather
   const weatherInfo = weather[0]

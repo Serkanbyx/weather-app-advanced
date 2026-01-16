@@ -1,0 +1,37 @@
+# Netlify Configuration File
+# Bu dosya Netlify'a projenin nasıl build edileceğini ve çalıştırılacağını söyler
+
+[build]
+  # Build komutu - Vite ile production build
+  command = "npm run build"
+  
+  # Build çıktı klasörü
+  publish = "dist"
+  
+  # Functions klasörü
+  functions = "netlify/functions"
+
+[functions]
+  # TypeScript fonksiyonları için Node.js bundler
+  node_bundler = "esbuild"
+
+# Development için local proxy ayarları
+# port = Netlify Dev'in çalıştığı port (tarayıcıda açacağın)
+# targetPort = Vite'ın çalıştığı port
+[dev]
+  command = "npm run dev"
+  port = 8888
+  targetPort = 5173
+  autoLaunch = true
+
+# SPA routing - tüm route'ları index.html'e yönlendir
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# API proxy - development'ta functions'a yönlendirme
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200

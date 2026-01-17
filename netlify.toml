@@ -24,14 +24,14 @@
   targetPort = 5173
   autoLaunch = true
 
-# SPA routing - tüm route'ları index.html'e yönlendir
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-
-# API proxy - development'ta functions'a yönlendirme
+# API proxy - Netlify Functions'a yönlendirme (ÖNCELİKLİ!)
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
+  status = 200
+
+# SPA routing - tüm route'ları index.html'e yönlendir (SONRA)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
   status = 200

@@ -3,7 +3,8 @@ import type {
   CurrentWeatherResponse, 
   ForecastResponse, 
   ApiError,
-  UnitSystem 
+  UnitSystem,
+  AirQualityResponse
 } from '@/types/weather'
 
 /**
@@ -144,6 +145,19 @@ export const weatherApi = {
     try {
       const url = buildUrl('forecast', { lat, lon, units: unit })
       const response = await apiClient.get<ForecastResponse>(url)
+      return response.data
+    } catch (error) {
+      handleApiError(error)
+    }
+  },
+
+  /**
+   * Get air quality data by coordinates
+   */
+  async getAirQuality(lat: number, lon: number): Promise<AirQualityResponse> {
+    try {
+      const url = buildUrl('air_pollution', { lat, lon })
+      const response = await apiClient.get<AirQualityResponse>(url)
       return response.data
     } catch (error) {
       handleApiError(error)

@@ -28,6 +28,7 @@ type Handler = (event: HandlerEvent) => Promise<HandlerResponse>
 
 const OPENWEATHER_API_KEY = process.env['OPENWEATHER_API_KEY']
 const OPENWEATHER_BASE_URL = 'https://api.openweathermap.org/data/2.5'
+const OPENWEATHER_AIR_POLLUTION_URL = 'https://api.openweathermap.org/data/2.5/air_pollution'
 
 // CORS headers - tarayıcının farklı origin'den istek yapmasına izin verir
 const headers = {
@@ -69,7 +70,36 @@ export const handler: Handler = async (event) => {
   // city veya q parametresinden birini kullan
   const cityName = q || city
 
-  // Parametre validasyonu
+  // Air Quality endpoint için sadece lat/lon gerekli
+  if (type === 'air_pollution') {
+    if (!lat || !lon) {
+      return errorResponse(400, 'Air quality requires "lat" and "lon" parameters.')
+    }
+
+    const url = `${OPENWEATHER_AIR_POLLUTION_URL}?lat=${lat}&lon=${lon}&appid=${OPENWEATHER_API_KEY}`
+
+    try {
+      console.log(`Fetching air quality for: ${lat},${lon}`)
+      const response = await fetch(url)
+      const data = await response.json()
+
+      if (!response.ok) {
+        console.error('OpenWeather Air Pollution API error:', data)
+        return errorResponse(response.status, data.message || 'Air Quality API error')
+      }
+
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(data)
+      }
+    } catch (error) {
+      console.error('Air pollution fetch error:', error)
+      return errorResponse(500, 'Failed to fetch air quality data')
+    }
+  }
+
+  // Parametre validasyonu (weather/forecast için)
   if (!cityName && (!lat || !lon)) {
     return errorResponse(400, 'Missing required parameters. Provide "city" (or "q") or "lat" and "lon".')
   }

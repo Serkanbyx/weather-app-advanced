@@ -4,7 +4,8 @@ import type {
   CurrentWeatherResponse, 
   ForecastResponse, 
   FavoriteCity,
-  UnitSystem 
+  UnitSystem,
+  AirQualityResponse
 } from '@/types/weather'
 import { weatherApi } from '@/services/weatherApi'
 import { generateId } from '@/lib/utils'
@@ -19,6 +20,7 @@ interface WeatherState {
   // Weather data
   currentWeather: CurrentWeatherResponse | null
   forecast: ForecastResponse | null
+  airQuality: AirQualityResponse | null
   
   // Favorites list
   favorites: FavoriteCity[]
@@ -35,6 +37,7 @@ interface WeatherState {
     city: string
     weather: CurrentWeatherResponse | null
     forecast: ForecastResponse | null
+    airQuality: AirQualityResponse | null
     timestamp: number
   } | null
 }
@@ -72,6 +75,7 @@ export const useWeatherStore = create<WeatherStore>()(
       currentCity: '',
       currentWeather: null,
       forecast: null,
+      airQuality: null,
       favorites: [],
       loading: false,
       error: null,
@@ -88,20 +92,31 @@ export const useWeatherStore = create<WeatherStore>()(
         set({ loading: true, error: null, currentCity: city })
 
         try {
-          // Fetch both current weather and forecast in parallel
+          // Fetch current weather and forecast in parallel
           const [weather, forecast] = await Promise.all([
             weatherApi.getCurrentWeather(city, get().unit),
             weatherApi.getForecast(city, get().unit)
           ])
 
+          // Fetch air quality using coordinates from weather response
+          let airQuality: AirQualityResponse | null = null
+          try {
+            airQuality = await weatherApi.getAirQuality(weather.coord.lat, weather.coord.lon)
+          } catch {
+            // Air quality fetch failed, continue without it
+            console.warn('Air quality data unavailable')
+          }
+
           set({ 
             currentWeather: weather, 
             forecast,
+            airQuality,
             loading: false,
             lastViewed: {
               city,
               weather,
               forecast,
+              airQuality,
               timestamp: Date.now()
             }
           })
@@ -114,7 +129,8 @@ export const useWeatherStore = create<WeatherStore>()(
             loading: false, 
             error: message,
             currentWeather: null,
-            forecast: null
+            forecast: null,
+            airQuality: null
           })
         }
       },
@@ -125,6 +141,7 @@ export const useWeatherStore = create<WeatherStore>()(
           currentCity: '',
           currentWeather: null,
           forecast: null,
+          airQuality: null,
           error: null
         })
       },
@@ -171,14 +188,24 @@ export const useWeatherStore = create<WeatherStore>()(
             weatherApi.getForecastByCoords(favorite.coord.lat, favorite.coord.lon, get().unit)
           ])
 
+          // Fetch air quality
+          let airQuality: AirQualityResponse | null = null
+          try {
+            airQuality = await weatherApi.getAirQuality(favorite.coord.lat, favorite.coord.lon)
+          } catch {
+            console.warn('Air quality data unavailable')
+          }
+
           set({ 
             currentWeather: weather, 
             forecast,
+            airQuality,
             loading: false,
             lastViewed: {
               city: favorite.name,
               weather,
               forecast,
+              airQuality,
               timestamp: Date.now()
             }
           })

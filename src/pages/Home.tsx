@@ -2,6 +2,8 @@ import { CloudSun, TrendingUp } from 'lucide-react'
 import { SearchForm } from '@/components/SearchForm'
 import { CurrentWeather } from '@/components/CurrentWeather'
 import { Forecast, HourlyForecastPreview } from '@/components/Forecast'
+import { AirQuality } from '@/components/AirQuality'
+import { TemperatureChart, WeatherConditionsChart } from '@/components/WeatherChart'
 import { WeatherCardSkeleton, ForecastCardSkeleton } from '@/components/ui/Skeleton'
 import { ErrorAlert, EmptyState } from '@/components/ui/Alert'
 import { useWeatherStore } from '@/store/weatherStore'
@@ -67,13 +69,23 @@ export function HomePage() {
   
   // Render weather data
   const renderWeather = () => (
-    <div className="grid lg:grid-cols-2 gap-6 mt-8">
-      <div className="space-y-6">
-        <CurrentWeather />
+    <div className="space-y-8 mt-8">
+      {/* Main weather info row */}
+      <div className="grid lg:grid-cols-2 gap-6">
+        <div className="space-y-6">
+          <CurrentWeather />
+          <AirQuality />
+        </div>
+        <div className="space-y-6">
+          <HourlyForecastPreview />
+          <Forecast />
+        </div>
       </div>
-      <div className="space-y-6">
-        <HourlyForecastPreview />
-        <Forecast />
+      
+      {/* Charts row */}
+      <div className="grid lg:grid-cols-2 gap-6">
+        <TemperatureChart />
+        <WeatherConditionsChart />
       </div>
     </div>
   )

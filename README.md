@@ -1,6 +1,6 @@
 # 🌤️ Weather App Advanced
 
-A modern, feature-rich Progressive Web Application (PWA) for weather forecasting. Built with React 18, TypeScript, and Tailwind CSS. Features real-time weather data, 5-day forecasts, favorites management, and offline support.
+A modern, feature-rich Progressive Web Application (PWA) for weather forecasting. Built with React 18, TypeScript, and Tailwind CSS. Features real-time weather data, 5-day forecasts, air quality monitoring, interactive charts, favorites management, and offline support.
 
 [![Created by Serkanby](https://img.shields.io/badge/Created%20by-Serkanby-blue?style=flat-square)](https://serkanbayraktar.com/)
 [![GitHub](https://img.shields.io/badge/GitHub-Serkanbyx-181717?style=flat-square&logo=github)](https://github.com/Serkanbyx)
@@ -12,10 +12,12 @@ A modern, feature-rich Progressive Web Application (PWA) for weather forecasting
 - **Real-Time Weather**: Display current temperature, humidity, wind speed, and conditions
 - **5-Day Forecast**: Extended weather predictions with daily breakdowns
 - **Hourly Forecast**: 24-hour detailed weather breakdown
+- **Air Quality Index (AQI)**: Real-time air pollution monitoring with pollutant levels
+- **Interactive Charts**: Temperature trends and weather conditions visualized with Recharts
 - **Favorites System**: Save frequently checked cities for quick access
 - **Unit Toggle**: Switch seamlessly between Celsius and Fahrenheit
 - **PWA Support**: Install on mobile/desktop devices, works offline with cached data
-- **Glassmorphism UI**: Modern, beautiful interface with glass-effect design
+- **Dark Mode UI**: Modern, beautiful interface with glass-effect design
 - **Fully Responsive**: Optimized for all screen sizes from mobile to desktop
 - **Secure API**: API keys hidden using Netlify serverless functions
 - **Persistent Storage**: Favorites and settings saved in LocalStorage
@@ -23,6 +25,20 @@ A modern, feature-rich Progressive Web Application (PWA) for weather forecasting
 ## Live Demo
 
 [🎮 View Live Demo](https://weather-app-advancedd.netlify.app)
+
+## Screenshots
+
+### Main Weather Dashboard
+
+The main dashboard displays current weather conditions, air quality index, hourly forecast, and 5-day predictions in a clean, organized layout.
+
+### Temperature Charts
+
+Interactive temperature trend charts show hourly temperature and "feels like" data with min/max/average summaries.
+
+### Air Quality Monitor
+
+Real-time air quality index with detailed pollutant levels (PM2.5, PM10, NO₂, O₃, SO₂, CO) and health recommendations.
 
 ## Technologies
 
@@ -33,11 +49,12 @@ A modern, feature-rich Progressive Web Application (PWA) for weather forecasting
 - **Zustand 5**: Lightweight state management with persistence middleware
 - **React Router v6**: Client-side routing with nested routes
 - **React Hook Form + Zod**: Type-safe form handling and validation
+- **Recharts**: Composable charting library for data visualization
 - **Axios**: Promise-based HTTP client with interceptors
 - **Lucide React**: Beautiful, consistent icon library
 - **vite-plugin-pwa**: Progressive Web App support with Workbox
 - **Netlify Functions**: Serverless functions for secure API proxy
-- **OpenWeather API**: Real-time weather data provider
+- **OpenWeather API**: Real-time weather and air quality data provider
 
 ## Installation
 
@@ -97,11 +114,12 @@ This runs the app with Netlify Functions for secure API key handling.
 
 1. **Search for a City**: Enter a city name in the search bar and press Enter or click the search button
 2. **Use Current Location**: Click the location button to get weather for your current position
-3. **View Forecast**: Scroll down to see the 5-day forecast with hourly details
-4. **Add to Favorites**: Click the heart icon to save a city to your favorites
-5. **Switch Units**: Toggle between Celsius and Fahrenheit using the unit switcher
-6. **Access Favorites**: Navigate to the Favorites page to view all saved cities
-7. **Install PWA**: Click the install button in your browser to add the app to your home screen
+3. **View Weather Data**: See current conditions, air quality, and detailed forecasts
+4. **Explore Charts**: Scroll down to view temperature trends and weather condition charts
+5. **Add to Favorites**: Click the heart icon to save a city to your favorites
+6. **Switch Units**: Toggle between Celsius and Fahrenheit using the unit switcher
+7. **Access Favorites**: Navigate to the Favorites page to view all saved cities
+8. **Install PWA**: Click the install button in your browser to add the app to your home screen
 
 ## How It Works?
 
@@ -113,15 +131,16 @@ The application follows a clean architecture pattern with separation of concerns
 src/
 ├── components/        # Reusable UI components
 │   ├── ui/           # Base UI components (Alert, Skeleton, Toast)
+│   ├── AirQuality.tsx    # Air quality index display
 │   ├── CurrentWeather.tsx
 │   ├── FavoriteCard.tsx
 │   ├── Forecast.tsx
 │   ├── Layout.tsx
-│   └── SearchForm.tsx
+│   ├── SearchForm.tsx
+│   └── WeatherChart.tsx  # Temperature & conditions charts
 ├── pages/            # Page-level components
 │   ├── Home.tsx
-│   ├── Favorites.tsx
-│   └── CityDetail.tsx
+│   └── Favorites.tsx
 ├── store/            # Zustand state management
 │   └── weatherStore.ts
 ├── services/         # API service layer
@@ -137,12 +156,13 @@ src/
 Zustand store manages global state with persistence:
 
 ```typescript
-// Weather data, favorites, and settings are persisted to localStorage
+// Weather data, favorites, air quality, and settings are persisted to localStorage
 const useWeatherStore = create(
   persist(
     (set, get) => ({
       currentWeather: null,
       forecast: null,
+      airQuality: null,
       favorites: [],
       unit: "metric",
       // ... actions
@@ -159,6 +179,24 @@ Production builds use Netlify Functions to proxy API requests:
 ```
 Frontend Request → Netlify Function → OpenWeather API
                    (API key hidden)
+```
+
+### Air Quality Integration
+
+Air quality data is fetched alongside weather data:
+
+```typescript
+// Fetch weather and air quality in parallel
+const [weather, forecast] = await Promise.all([
+  weatherApi.getCurrentWeather(city, unit),
+  weatherApi.getForecast(city, unit),
+]);
+
+// Fetch AQI using coordinates from weather response
+const airQuality = await weatherApi.getAirQuality(
+  weather.coord.lat,
+  weather.coord.lon
+);
 ```
 
 ### PWA Configuration
@@ -182,7 +220,7 @@ workbox: {
 
 ## Customization
 
-### Add Custom Themes
+### Add Custom Color Themes
 
 Edit `tailwind.config.js` to customize the color palette:
 
@@ -224,6 +262,19 @@ expiration: {
 }
 ```
 
+### Customize Chart Appearance
+
+Modify chart colors and styles in `WeatherChart.tsx`:
+
+```typescript
+<Area
+  type="monotone"
+  dataKey="temp"
+  stroke="#0ea5e9" // Temperature line color
+  fill="url(#tempGradient)" // Gradient fill
+/>
+```
+
 ## Features in Detail
 
 ### Completed Features
@@ -233,11 +284,15 @@ expiration: {
 - ✅ Real-time weather display
 - ✅ 5-day forecast with daily breakdown
 - ✅ Hourly forecast for 24 hours
+- ✅ Air quality index (AQI) monitoring
+- ✅ Temperature trend charts
+- ✅ Weather conditions charts
+- ✅ Sunrise/sunset times display
 - ✅ Favorites management (add/remove)
 - ✅ Celsius/Fahrenheit toggle
 - ✅ PWA installation support
 - ✅ Offline mode with cached data
-- ✅ Responsive glassmorphism design
+- ✅ Dark mode glassmorphism design
 - ✅ Secure API key handling
 - ✅ Toast notifications
 - ✅ Loading skeletons
@@ -248,11 +303,9 @@ expiration: {
 - [ ] Weather alerts and notifications
 - [ ] Multiple language support (i18n)
 - [ ] Weather maps integration
-- [ ] Air quality index (AQI)
-- [ ] Sunrise/sunset times
-- [ ] Weather widgets
-- [ ] Dark/light theme toggle
-- [ ] Weather history charts
+- [ ] Weather widgets for desktop
+- [ ] Historical weather data
+- [ ] Weather comparison between cities
 
 ## Available Scripts
 
@@ -329,6 +382,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 ## Acknowledgments
 
 - Weather data provided by [OpenWeatherMap](https://openweathermap.org/)
+- Charts powered by [Recharts](https://recharts.org/)
 - Icons by [Lucide](https://lucide.dev/)
 - Fonts by [Google Fonts](https://fonts.google.com/)
 - PWA support by [vite-plugin-pwa](https://vite-pwa-org.netlify.app/)

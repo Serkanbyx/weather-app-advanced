@@ -51,17 +51,27 @@ export function SearchForm() {
     try {
       const { weather, forecast } = await weatherApi.getCurrentLocationWeather(unit)
       
+      // Try to fetch air quality for current location
+      let airQuality = null
+      try {
+        airQuality = await weatherApi.getAirQuality(weather.coord.lat, weather.coord.lon)
+      } catch {
+        console.warn('Air quality data unavailable')
+      }
+      
       // Update store with location data
       useWeatherStore.setState({
         currentCity: weather.name,
         currentWeather: weather,
         forecast,
+        airQuality,
         loading: false,
         error: null,
         lastViewed: {
           city: weather.name,
           weather,
           forecast,
+          airQuality,
           timestamp: Date.now()
         }
       })

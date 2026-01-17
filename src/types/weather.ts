@@ -150,3 +150,37 @@ export type WeatherCategory =
 
 // Unit system
 export type UnitSystem = 'metric' | 'imperial';
+
+// Air Quality Index Response
+export interface AirQualityResponse {
+  coord: Coordinates;
+  list: AirQualityData[];
+}
+
+export interface AirQualityData {
+  main: {
+    aqi: 1 | 2 | 3 | 4 | 5; // 1 = Good, 2 = Fair, 3 = Moderate, 4 = Poor, 5 = Very Poor
+  };
+  components: AirQualityComponents;
+  dt: number;
+}
+
+export interface AirQualityComponents {
+  co: number;      // Carbon monoxide (μg/m³)
+  no: number;      // Nitrogen monoxide (μg/m³)
+  no2: number;     // Nitrogen dioxide (μg/m³)
+  o3: number;      // Ozone (μg/m³)
+  so2: number;     // Sulphur dioxide (μg/m³)
+  pm2_5: number;   // Fine particles (μg/m³)
+  pm10: number;    // Coarse particles (μg/m³)
+  nh3: number;     // Ammonia (μg/m³)
+}
+
+// AQI Level info for UI
+export interface AQILevel {
+  level: number;
+  label: string;
+  description: string;
+  color: string;
+  bgColor: string;
+}

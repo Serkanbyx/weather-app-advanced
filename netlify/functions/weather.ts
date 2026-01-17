@@ -63,11 +63,15 @@ export const handler: Handler = async (event) => {
   }
 
   // Query parametrelerini al
-  const { city, lat, lon, type = 'weather', units = 'metric' } = event.queryStringParameters || {}
+  // Not: Frontend 'q' parametresi gönderir (OpenWeather API formatı), 'city' de kabul edilir
+  const { city, q, lat, lon, type = 'weather', units = 'metric' } = event.queryStringParameters || {}
+
+  // city veya q parametresinden birini kullan
+  const cityName = q || city
 
   // Parametre validasyonu
-  if (!city && (!lat || !lon)) {
-    return errorResponse(400, 'Missing required parameters. Provide "city" or "lat" and "lon".')
+  if (!cityName && (!lat || !lon)) {
+    return errorResponse(400, 'Missing required parameters. Provide "city" (or "q") or "lat" and "lon".')
   }
 
   // Endpoint belirleme (weather veya forecast)
@@ -75,16 +79,16 @@ export const handler: Handler = async (event) => {
 
   // URL oluşturma
   let url = `${OPENWEATHER_BASE_URL}/${endpoint}?appid=${OPENWEATHER_API_KEY}&units=${units}`
-  
-  if (city) {
-    url += `&q=${encodeURIComponent(city)}`
+
+  if (cityName) {
+    url += `&q=${encodeURIComponent(cityName)}`
   } else {
     url += `&lat=${lat}&lon=${lon}`
   }
 
   try {
-    console.log(`Fetching weather data for: ${city || `${lat},${lon}`}`)
-    
+    console.log(`Fetching weather data for: ${cityName || `${lat},${lon}`}`)
+
     const response = await fetch(url)
     const data = await response.json()
 

@@ -171,10 +171,14 @@ export function getWeatherIconUrl(icon: string, size: '2x' | '4x' = '2x'): strin
 }
 
 /**
- * Generate unique ID for favorites
+ * Generate unique ID for favorites.
+ * Uses the native crypto API when available, with a safe fallback.
  */
 export function generateId(): string {
-  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+    return crypto.randomUUID()
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
 }
 
 /**

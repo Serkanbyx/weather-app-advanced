@@ -48,6 +48,7 @@ interface WeatherState {
 interface WeatherActions {
   // Search actions
   searchCity: (city: string) => Promise<void>
+  fetchByCoords: (lat: number, lon: number, cityLabel: string) => Promise<void>
   clearSearch: () => void
   
   // Favorites actions
@@ -66,6 +67,42 @@ interface WeatherActions {
 type WeatherStore = WeatherState & WeatherActions
 
 /**
+ * Weather data bundle (weather + forecast + air quality)
+ */
+interface WeatherBundle {
+  weather: CurrentWeatherResponse
+  forecast: ForecastResponse
+  airQuality: AirQualityResponse | null
+}
+
+/**
+ * Fetch weather, forecast and air quality together.
+ * Air quality is optional: a failure here must not break the main flow.
+ */
+async function loadWeatherBundle(
+  weatherPromise: Promise<CurrentWeatherResponse>,
+  forecastPromise: Promise<ForecastResponse>
+): Promise<WeatherBundle> {
+  const [weather, forecast] = await Promise.all([weatherPromise, forecastPromise])
+
+  let airQuality: AirQualityResponse | null = null
+  try {
+    airQuality = await weatherApi.getAirQuality(weather.coord.lat, weather.coord.lon)
+  } catch {
+    console.warn('Air quality data unavailable')
+  }
+
+  return { weather, forecast, airQuality }
+}
+
+/**
+ * Normalize unknown errors into a user-friendly message.
+ */
+function toErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : 'Failed to fetch weather data'
+}
+
+/**
  * Zustand Weather Store with Persistence
  */
 export const useWeatherStore = create<WeatherStore>()(
@@ -82,7 +119,7 @@ export const useWeatherStore = create<WeatherStore>()(
       unit: 'metric',
       lastViewed: null,
 
-      // Search for a city
+      // Search for a city by name
       searchCity: async (city: string) => {
         if (!city.trim()) {
           set({ error: 'Please enter a city name' })
@@ -92,46 +129,50 @@ export const useWeatherStore = create<WeatherStore>()(
         set({ loading: true, error: null, currentCity: city })
 
         try {
-          // Fetch current weather and forecast in parallel
-          const [weather, forecast] = await Promise.all([
-            weatherApi.getCurrentWeather(city, get().unit),
-            weatherApi.getForecast(city, get().unit)
-          ])
+          const { unit } = get()
+          const { weather, forecast, airQuality } = await loadWeatherBundle(
+            weatherApi.getCurrentWeather(city, unit),
+            weatherApi.getForecast(city, unit)
+          )
 
-          // Fetch air quality using coordinates from weather response
-          let airQuality: AirQualityResponse | null = null
-          try {
-            airQuality = await weatherApi.getAirQuality(weather.coord.lat, weather.coord.lon)
-          } catch {
-            // Air quality fetch failed, continue without it
-            console.warn('Air quality data unavailable')
-          }
-
-          set({ 
-            currentWeather: weather, 
+          set({
+            currentWeather: weather,
             forecast,
             airQuality,
             loading: false,
-            lastViewed: {
-              city,
-              weather,
-              forecast,
-              airQuality,
-              timestamp: Date.now()
-            }
+            lastViewed: { city, weather, forecast, airQuality, timestamp: Date.now() }
           })
         } catch (error) {
-          const message = error instanceof Error 
-            ? error.message 
-            : 'Failed to fetch weather data'
-          
-          set({ 
-            loading: false, 
-            error: message,
+          set({
+            loading: false,
+            error: toErrorMessage(error),
             currentWeather: null,
             forecast: null,
             airQuality: null
           })
+        }
+      },
+
+      // Fetch weather by exact coordinates (avoids ambiguous city names)
+      fetchByCoords: async (lat: number, lon: number, cityLabel: string) => {
+        set({ loading: true, error: null, currentCity: cityLabel })
+
+        try {
+          const { unit } = get()
+          const { weather, forecast, airQuality } = await loadWeatherBundle(
+            weatherApi.getCurrentWeatherByCoords(lat, lon, unit),
+            weatherApi.getForecastByCoords(lat, lon, unit)
+          )
+
+          set({
+            currentWeather: weather,
+            forecast,
+            airQuality,
+            loading: false,
+            lastViewed: { city: cityLabel, weather, forecast, airQuality, timestamp: Date.now() }
+          })
+        } catch (error) {
+          set({ loading: false, error: toErrorMessage(error) })
         }
       },
 
@@ -178,54 +219,23 @@ export const useWeatherStore = create<WeatherStore>()(
         return favorites.some(f => f.name.toLowerCase() === cityName.toLowerCase())
       },
 
-      // Load weather for a favorite city
+      // Load weather for a favorite city (by coordinates for accuracy)
       loadFavoriteWeather: async (favorite: FavoriteCity) => {
-        set({ loading: true, error: null, currentCity: favorite.name })
-
-        try {
-          const [weather, forecast] = await Promise.all([
-            weatherApi.getCurrentWeatherByCoords(favorite.coord.lat, favorite.coord.lon, get().unit),
-            weatherApi.getForecastByCoords(favorite.coord.lat, favorite.coord.lon, get().unit)
-          ])
-
-          // Fetch air quality
-          let airQuality: AirQualityResponse | null = null
-          try {
-            airQuality = await weatherApi.getAirQuality(favorite.coord.lat, favorite.coord.lon)
-          } catch {
-            console.warn('Air quality data unavailable')
-          }
-
-          set({ 
-            currentWeather: weather, 
-            forecast,
-            airQuality,
-            loading: false,
-            lastViewed: {
-              city: favorite.name,
-              weather,
-              forecast,
-              airQuality,
-              timestamp: Date.now()
-            }
-          })
-        } catch (error) {
-          const message = error instanceof Error 
-            ? error.message 
-            : 'Failed to fetch weather data'
-          
-          set({ loading: false, error: message })
-        }
+        await get().fetchByCoords(favorite.coord.lat, favorite.coord.lon, favorite.name)
       },
 
       // Set temperature unit
       setUnit: (unit: UnitSystem) => {
-        const { currentCity } = get()
+        const { currentWeather } = get()
         set({ unit })
-        
-        // Refetch if there's a current search
-        if (currentCity) {
-          get().searchCity(currentCity)
+
+        // Refetch by coordinates so the active city stays exactly the same
+        if (currentWeather) {
+          get().fetchByCoords(
+            currentWeather.coord.lat,
+            currentWeather.coord.lon,
+            currentWeather.name
+          )
         }
       },
 

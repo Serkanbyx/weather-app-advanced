@@ -10,10 +10,10 @@ import type {
 /**
  * Weather API Service
  * 
- * Production'da: Netlify Functions üzerinden (API key gizli)
- * Development'ta: Direkt OpenWeather API (veya Netlify Dev)
+ * Production: via Netlify Functions (API key hidden)
+ * Development: directly against the OpenWeather API (or Netlify Dev)
  * 
- * API key artık frontend'de görünmez!
+ * The API key is no longer exposed on the frontend!
  */
 
 // Environment detection
@@ -21,14 +21,14 @@ const isDevelopment = import.meta.env.DEV
 const useDirectApi = isDevelopment && import.meta.env.VITE_OPENWEATHER_API_KEY
 
 // API URLs
-const NETLIFY_FUNCTION_URL = '/api/weather' // netlify.toml'da /api/* → /.netlify/functions/* redirect var
+const NETLIFY_FUNCTION_URL = '/api/weather' // netlify.toml redirects /api/* → /.netlify/functions/*
 const OPENWEATHER_BASE_URL = 'https://api.openweathermap.org/data/2.5'
 
-// Development için direkt API key (sadece local'de kullanılır)
+// Direct API key for development (used locally only)
 const DEV_API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY
 
 /**
- * Axios instance - timeout ve base config
+ * Axios instance - timeout and base config
  */
 const apiClient = axios.create({
   timeout: 10000
@@ -51,7 +51,7 @@ function handleApiError(error: unknown): never {
       throw new Error(apiError.message)
     }
     
-    // Error response'dan mesaj al
+    // Read the message from the error response
     if (error.response?.data?.error) {
       throw new Error(error.response.data.error)
     }
@@ -75,7 +75,7 @@ function handleApiError(error: unknown): never {
  */
 function buildUrl(endpoint: string, params: Record<string, string | number>): string {
   if (useDirectApi) {
-    // Development - direkt API çağrısı
+    // Development - direct API call
     const searchParams = new URLSearchParams({
       appid: DEV_API_KEY,
       ...Object.fromEntries(
@@ -84,7 +84,7 @@ function buildUrl(endpoint: string, params: Record<string, string | number>): st
     })
     return `${OPENWEATHER_BASE_URL}/${endpoint}?${searchParams}`
   } else {
-    // Production - Netlify Function üzerinden
+    // Production - via Netlify Function
     const searchParams = new URLSearchParams({
       type: endpoint,
       ...Object.fromEntries(

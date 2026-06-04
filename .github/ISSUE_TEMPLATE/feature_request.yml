@@ -16,7 +16,7 @@ body:
     attributes:
       label: Feature Summary
       description: A brief summary of the feature
-      placeholder: e.g., Add dark mode toggle
+      placeholder: e.g., Add weather alerts and notifications
     validations:
       required: true
 

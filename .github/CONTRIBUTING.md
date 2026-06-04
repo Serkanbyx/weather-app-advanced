@@ -83,9 +83,8 @@ Before suggesting, please check if:
 Make sure you have the following installed:
 
 - Git
-- Node.js 18 or higher
-- npm or yarn
 - A code editor (VS Code recommended)
+- Required runtime/dependencies for the project
 
 ### Local Installation
 
@@ -98,9 +97,6 @@ cd weather-app-advanced
 
 # Install dependencies
 npm install
-
-# Create .env file and add your OpenWeather API key
-echo "VITE_OPENWEATHER_API_KEY=your_api_key_here" > .env
 
 # Start development server
 npm run dev
@@ -141,14 +137,12 @@ refactor: simplify validation logic
 
 ### Code Style
 
-- Use consistent indentation (2 spaces)
-- Use meaningful variable and function names (camelCase)
+- Use consistent indentation (2 or 4 spaces)
+- Use meaningful variable and function names
 - Write comments for complex logic
 - Keep functions small and focused
 - Follow DRY (Don't Repeat Yourself) principle
 - Remove unused code and imports
-- Use TypeScript types properly
-- Follow React hooks best practices
 
 ## Branch Naming Convention
 

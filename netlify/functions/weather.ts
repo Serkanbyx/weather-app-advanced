@@ -1,10 +1,10 @@
 /**
  * Netlify Serverless Function - Weather API Proxy
  * 
- * Bu fonksiyon frontend'den gelen istekleri alır ve OpenWeather API'ye yönlendirir.
- * API key sadece bu sunucu tarafında kalır, frontend'de asla görünmez.
+ * This function receives requests from the frontend and forwards them to the OpenWeather API.
+ * The API key stays only on this server side and is never exposed to the frontend.
  * 
- * Kullanım:
+ * Usage:
  * - GET /.netlify/functions/weather?city=Istanbul
  * - GET /.netlify/functions/weather?lat=41.01&lon=28.97
  */
@@ -30,7 +30,7 @@ const OPENWEATHER_API_KEY = process.env['OPENWEATHER_API_KEY']
 const OPENWEATHER_BASE_URL = 'https://api.openweathermap.org/data/2.5'
 const OPENWEATHER_AIR_POLLUTION_URL = 'https://api.openweathermap.org/data/2.5/air_pollution'
 
-// CORS headers - tarayıcının farklı origin'den istek yapmasına izin verir
+// CORS headers - allow the browser to make requests from a different origin
 const headers = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'Content-Type',
@@ -38,39 +38,39 @@ const headers = {
   'Content-Type': 'application/json'
 }
 
-// Hata response helper
+// Error response helper
 const errorResponse = (statusCode: number, message: string) => ({
   statusCode,
   headers,
   body: JSON.stringify({ error: message })
 })
 
-// Ana handler fonksiyonu
+// Main handler function
 export const handler: Handler = async (event) => {
   // OPTIONS request (CORS preflight)
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 200, headers, body: '' }
   }
 
-  // Sadece GET isteklerine izin ver
+  // Only allow GET requests
   if (event.httpMethod !== 'GET') {
     return errorResponse(405, 'Method not allowed. Use GET.')
   }
 
-  // API key kontrolü
+  // API key check
   if (!OPENWEATHER_API_KEY) {
     console.error('OPENWEATHER_API_KEY environment variable is not set')
     return errorResponse(500, 'Server configuration error')
   }
 
-  // Query parametrelerini al
-  // Not: Frontend 'q' parametresi gönderir (OpenWeather API formatı), 'city' de kabul edilir
+  // Read query parameters
+  // Note: the frontend sends 'q' (OpenWeather API format); 'city' is also accepted
   const { city, q, lat, lon, type = 'weather', units = 'metric' } = event.queryStringParameters || {}
 
-  // city veya q parametresinden birini kullan
+  // Use either the 'city' or 'q' parameter
   const cityName = q || city
 
-  // Air Quality endpoint için sadece lat/lon gerekli
+  // The Air Quality endpoint only requires lat/lon
   if (type === 'air_pollution') {
     if (!lat || !lon) {
       return errorResponse(400, 'Air quality requires "lat" and "lon" parameters.')
@@ -99,15 +99,15 @@ export const handler: Handler = async (event) => {
     }
   }
 
-  // Parametre validasyonu (weather/forecast için)
+  // Parameter validation (for weather/forecast)
   if (!cityName && (!lat || !lon)) {
     return errorResponse(400, 'Missing required parameters. Provide "city" (or "q") or "lat" and "lon".')
   }
 
-  // Endpoint belirleme (weather veya forecast)
+  // Determine the endpoint (weather or forecast)
   const endpoint = type === 'forecast' ? 'forecast' : 'weather'
 
-  // URL oluşturma
+  // Build the URL
   let url = `${OPENWEATHER_BASE_URL}/${endpoint}?appid=${OPENWEATHER_API_KEY}&units=${units}`
 
   if (cityName) {
@@ -122,13 +122,13 @@ export const handler: Handler = async (event) => {
     const response = await fetch(url)
     const data = await response.json()
 
-    // OpenWeather API hatası kontrolü
+    // Check for OpenWeather API errors
     if (!response.ok) {
       console.error('OpenWeather API error:', data)
       return errorResponse(response.status, data.message || 'Weather API error')
     }
 
-    // Başarılı response
+    // Successful response
     return {
       statusCode: 200,
       headers,

@@ -14,6 +14,18 @@ import {
 import { TrendingUp, Droplets, Wind, ThermometerSun } from 'lucide-react'
 import { useWeatherStore } from '@/store/weatherStore'
 import { formatTemp } from '@/lib/utils'
+import type { UnitSystem } from '@/types/weather'
+
+/**
+ * Human-readable labels for each chart series.
+ */
+const seriesLabels: Record<string, string> = {
+  temp: 'Temperature',
+  feelsLike: 'Feels Like',
+  humidity: 'Humidity',
+  wind: 'Wind',
+  rainChance: 'Rain Chance'
+}
 
 /**
  * Custom tooltip component for charts
@@ -26,11 +38,30 @@ interface TooltipProps {
     color: string
   }>
   label?: string
+  unit?: UnitSystem
 }
 
-function CustomTooltip({ active, payload, label }: TooltipProps) {
+function CustomTooltip({ active, payload, label, unit = 'metric' }: TooltipProps) {
   if (!active || !payload?.length) return null
-  
+
+  const tempSymbol = unit === 'metric' ? '°C' : '°F'
+  const windUnit = unit === 'metric' ? 'm/s' : 'mph'
+
+  const formatValue = (dataKey: string, value: number): string => {
+    switch (dataKey) {
+      case 'temp':
+      case 'feelsLike':
+        return `${value}${tempSymbol}`
+      case 'humidity':
+      case 'rainChance':
+        return `${value}%`
+      case 'wind':
+        return `${value} ${windUnit}`
+      default:
+        return `${value}`
+    }
+  }
+
   return (
     <div className="glass rounded-lg p-3 shadow-xl border border-storm-600">
       <p className="text-sm font-medium text-storm-100 mb-2">{label}</p>
@@ -41,17 +72,10 @@ function CustomTooltip({ active, payload, label }: TooltipProps) {
             style={{ backgroundColor: entry.color }} 
           />
           <span className="text-storm-300">
-            {entry.dataKey === 'temp' && 'Temperature'}
-            {entry.dataKey === 'humidity' && 'Humidity'}
-            {entry.dataKey === 'wind' && 'Wind'}
-            {entry.dataKey === 'pop' && 'Precipitation'}
-            : 
+            {seriesLabels[entry.dataKey] ?? entry.dataKey}:
           </span>
           <span className="font-medium text-storm-100">
-            {entry.dataKey === 'temp' && `${entry.value}°`}
-            {entry.dataKey === 'humidity' && `${entry.value}%`}
-            {entry.dataKey === 'wind' && `${entry.value} m/s`}
-            {entry.dataKey === 'pop' && `${Math.round(entry.value * 100)}%`}
+            {formatValue(entry.dataKey, entry.value)}
           </span>
         </div>
       ))}
@@ -137,7 +161,7 @@ export function TemperatureChart() {
               axisLine={false}
               tickFormatter={(value) => `${value}°`}
             />
-            <Tooltip content={<CustomTooltip />} />
+            <Tooltip content={<CustomTooltip unit={unit} />} />
             <Legend 
               wrapperStyle={{ paddingTop: '20px' }}
               formatter={(value) => (
@@ -198,7 +222,7 @@ export function TemperatureChart() {
  * Shows humidity, wind, and precipitation probability
  */
 export function WeatherConditionsChart() {
-  const { forecast } = useWeatherStore()
+  const { forecast, unit } = useWeatherStore()
   
   // Process forecast data for chart
   const chartData = useMemo(() => {
@@ -215,7 +239,8 @@ export function WeatherConditionsChart() {
         time: timeLabel,
         humidity: item.main.humidity,
         wind: Math.round(item.wind.speed * 10) / 10,
-        pop: item.pop
+        // Normalize precipitation probability (0-1) to a percentage for the % axis
+        rainChance: Math.round(item.pop * 100)
       }
     })
   }, [forecast])
@@ -260,17 +285,17 @@ export function WeatherConditionsChart() {
               axisLine={false}
               tickFormatter={(value) => `${value}%`}
             />
-            <Tooltip content={<CustomTooltip />} />
+            <Tooltip content={<CustomTooltip unit={unit} />} />
             <Legend 
               wrapperStyle={{ paddingTop: '20px' }}
               formatter={(value) => (
                 <span className="text-storm-300 text-sm">
-                  {value === 'humidity' ? 'Humidity' : value === 'pop' ? 'Rain Chance' : 'Wind'}
+                  {value === 'humidity' ? 'Humidity' : 'Rain Chance'}
                 </span>
               )}
             />
             <Bar dataKey="humidity" fill="#0ea5e9" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="pop" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="rainChance" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -300,7 +325,7 @@ export function WeatherConditionsChart() {
           <div>
             <p className="text-xs text-storm-400">Rain Chance</p>
             <p className="font-bold text-storm-100">
-              {Math.round(Math.max(...chartData.map(d => d.pop)) * 100)}%
+              {Math.max(...chartData.map(d => d.rainChance))}%
             </p>
           </div>
         </div>

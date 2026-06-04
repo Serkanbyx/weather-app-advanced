@@ -25,7 +25,7 @@ type SearchFormData = z.infer<typeof searchSchema>
  * Uses React Hook Form with Zod validation
  */
 export function SearchForm() {
-  const { searchCity, loading, unit, clearSearch } = useWeatherStore()
+  const { searchCity, loading, unit, clearSearch, currentCity } = useWeatherStore()
   const [geoLoading, setGeoLoading] = useState(false)
   
   const {
@@ -111,7 +111,7 @@ export function SearchForm() {
           />
           
           {/* Clear button */}
-          {useWeatherStore.getState().currentCity && (
+          {currentCity && (
             <button
               type="button"
               onClick={handleClear}

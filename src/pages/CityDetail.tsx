@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useCallback, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { ArrowLeft, MapPin } from 'lucide-react'
 import { CurrentWeather } from '@/components/CurrentWeather'
@@ -20,21 +20,41 @@ export function CityDetailPage() {
     loading, 
     error, 
     searchCity, 
+    fetchByCoords,
     clearError,
-    currentCity 
+    currentCity,
+    favorites
   } = useWeatherStore()
   
-  // Load city weather on mount
+  // Load city weather, preferring favorite coordinates to avoid name ambiguity
+  const loadCity = useCallback(
+    (cityName: string) => {
+      const favorite = favorites.find(
+        f => f.name.toLowerCase() === cityName.toLowerCase()
+      )
+
+      if (favorite) {
+        fetchByCoords(favorite.coord.lat, favorite.coord.lon, favorite.name)
+      } else {
+        searchCity(cityName)
+      }
+    },
+    [favorites, fetchByCoords, searchCity]
+  )
+
   useEffect(() => {
-    if (name && name !== currentCity) {
-      searchCity(decodeURIComponent(name))
+    if (name) {
+      const decoded = decodeURIComponent(name)
+      if (decoded !== currentCity) {
+        loadCity(decoded)
+      }
     }
-  }, [name, currentCity, searchCity])
+  }, [name, currentCity, loadCity])
   
   // Handle retry
   const handleRetry = () => {
     if (name) {
-      searchCity(decodeURIComponent(name))
+      loadCity(decodeURIComponent(name))
     }
   }
   

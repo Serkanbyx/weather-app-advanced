@@ -79,11 +79,16 @@ cd weather-app-advanced
 npm install
 ```
 
-3. Create environment file:
+3. Create environment file in the root directory:
 
 ```bash
-# Create .env file in root directory
+# macOS / Linux
 touch .env
+```
+
+```powershell
+# Windows (PowerShell)
+New-Item .env
 ```
 
 4. Add your API key to `.env`:
@@ -140,7 +145,8 @@ src/
 │   └── WeatherChart.tsx  # Temperature & conditions charts
 ├── pages/            # Page-level components
 │   ├── Home.tsx
-│   └── Favorites.tsx
+│   ├── Favorites.tsx
+│   └── CityDetail.tsx
 ├── store/            # Zustand state management
 │   └── weatherStore.ts
 ├── services/         # API service layer
@@ -337,6 +343,8 @@ npm run build
 
 ## Contributing
 
+Contributions are welcome! Please read our [Contributing Guide](.github/CONTRIBUTING.md) and [Code of Conduct](.github/CODE_OF_CONDUCT.md) before getting started.
+
 1. Fork the repository
 2. Create your feature branch:
 
@@ -366,6 +374,10 @@ git push origin feat/amazing-feature
 - `docs:` - Documentation changes
 - `chore:` - Maintenance tasks
 - `style:` - Code style changes
+
+## Security
+
+Found a security vulnerability? Please review our [Security Policy](.github/SECURITY.md) and report it responsibly to [serkanbyx1@gmail.com](mailto:serkanbyx1@gmail.com).
 
 ## License
 

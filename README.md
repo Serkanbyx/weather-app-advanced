@@ -128,6 +128,8 @@ This runs the app with Netlify Functions for secure API key handling.
 
 ## How It Works?
 
+> For the original step-by-step build playbook, see [docs/build-guide.md](docs/build-guide.md).
+
 ### Architecture
 
 The application follows a clean architecture pattern with separation of concerns:

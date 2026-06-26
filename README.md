@@ -32,13 +32,19 @@ A modern, feature-rich Progressive Web Application (PWA) for weather forecasting
 
 The main dashboard displays current weather conditions, air quality index, hourly forecast, and 5-day predictions in a clean, organized layout.
 
+![Main Weather Dashboard](docs/screenshots/dashboard.png)
+
 ### Temperature Charts
 
 Interactive temperature trend charts show hourly temperature and "feels like" data with min/max/average summaries.
 
+![Temperature Charts](docs/screenshots/temperature-charts.png)
+
 ### Air Quality Monitor
 
 Real-time air quality index with detailed pollutant levels (PM2.5, PM10, NO₂, O₃, SO₂, CO) and health recommendations.
+
+![Air Quality Monitor](docs/screenshots/air-quality.png)
 
 ## Technologies
 
